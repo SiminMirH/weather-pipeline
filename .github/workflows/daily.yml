@@ -1,0 +1,31 @@
+name: Daily Weather Pipeline
+
+on:
+  schedule:
+    - cron: "0 6 * * *"      # هر روز ساعت 6 صبح UTC
+  workflow_dispatch:          # امکان اجرای دستی
+
+permissions:
+  contents: write             # اجازه push کردن دیتابیس
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: pip install -r requirements.txt
+
+      - run: python pipeline.py
+
+      - name: Save database back to repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add weather.db
+          git commit -m "Update data" || echo "No changes"
+          git push
